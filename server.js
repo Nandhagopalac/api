@@ -6,57 +6,66 @@ const port = 3050;
 app.use(cors());
 app.use(express.json());
 
-let users = [
-  { id: 1, name: 'John Doe', email: 'john.doe@example.com' },
-  { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com' }
-];
-let nextId = 3;
+const db = require('./db');
 
 // Get all users
-app.get('/users', (req, res) => {
-  res.json(users);
+app.get('/users', async (req, res) => {
+  try {
+    const users = await db.getUsers();
+    res.json(users);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
 // Get a single user by ID
-app.get('/users/:id', (req, res) => {
-  const user = users.find(u => u.id === parseInt(req.params.id));
-  if (!user) return res.status(404).send('User not found.');
-  res.json(user);
+app.get('/users/:id', async (req, res) => {
+  try {
+    const user = await db.getUserById(parseInt(req.params.id));
+    if (!user) return res.status(404).send('User not found.');
+    res.json(user);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
 // Create a new user
-app.post('/users', (req, res) => {
+app.post('/users', async (req, res) => {
   const { name, email } = req.body;
   if (!name || !email) {
     return res.status(400).send('Name and email are required.');
   }
-  const newUser = { id: nextId++, name, email };
-  users.push(newUser);
-  res.status(201).json(newUser);
+  try {
+    const newUser = await db.createUser(name, email);
+    res.status(201).json(newUser);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
 // Update a user
-app.put('/users/:id', (req, res) => {
-  const user = users.find(u => u.id === parseInt(req.params.id));
-  if (!user) return res.status(404).send('User not found.');
-
+app.put('/users/:id', async (req, res) => {
   const { name, email } = req.body;
   if (!name || !email) {
     return res.status(400).send('Name and email are required.');
   }
-
-  user.name = name;
-  user.email = email;
-  res.json(user);
+  try {
+    const updatedUser = await db.updateUser(parseInt(req.params.id), name, email);
+    if (!updatedUser) return res.status(404).send('User not found.');
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
 // Delete a user
-app.delete('/users/:id', (req, res) => {
-  const index = users.findIndex(u => u.id === parseInt(req.params.id));
-  if (index === -1) return res.status(404).send('User not found.');
-
-  users.splice(index, 1);
-  res.status(204).send();
+app.delete('/users/:id', async (req, res) => {
+  try {
+    await db.deleteUser(parseInt(req.params.id));
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
 app.listen(port, () => {
