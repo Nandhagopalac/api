@@ -29,3 +29,17 @@ def get_userprofile():
     "linkedin":"www.linkedin.com/in/nandhagopalac"
 
   }
+@app.get("/user/{user_id}")
+def user_profile(user_id:int):
+  if (user_id==1):
+    return {
+          "name":"Nandha",
+    "Emailid":"nandhagopalac@gmail.com",
+    "linkedin":"www.linkedin.com/in/nandhagopalac"
+    }
+  else:
+    return{
+            "name":"Agalya"+str(user_id),
+    "Emailid":"nandhagopalac@gmail.com",
+    "linkedin":"www.linkedin.com/in/nandhagopalac"
+    }
